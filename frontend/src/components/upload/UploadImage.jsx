@@ -8,10 +8,11 @@ import {
   Link,
   TextField,
 } from "@mui/material";
+import axios from "axios";
 
 import DefaultImage from "../../assets/default.jpg";
 
-function UploadImage() {
+function UploadImage(props) {
   const [previewImage, setPreviewImage] = useState(DefaultImage);
   const [imageData, setImageData] = useState({ img: null, description: "" });
   const [uploadActive, setUploadActive] = useState(false);
@@ -22,6 +23,8 @@ function UploadImage() {
   };
 
   const handleInactiveImage = () => {
+    setPreviewImage(DefaultImage);
+    setImageData({ img: null, description: "" });
     setUploadActive(false);
   };
 
@@ -40,9 +43,7 @@ function UploadImage() {
         return;
       }
       setPreviewImage(URL.createObjectURL(event.target.files[0]));
-      const data = new FormData();
-      data.append("file", event.target.files[0]);
-      setImageData((prev) => ({ ...prev, img: data }));
+      setImageData((prev) => ({ ...prev, img: event.target.files[0] }));
     }
   };
 
@@ -50,7 +51,30 @@ function UploadImage() {
     setImageData((prev) => ({ ...prev, description: event.target.value }));
   };
 
-  const handleUploadImage = (event) => {};
+  const handleUploadImage = (event) => {
+    event.preventDefault();
+    if (imageData.img === null) {
+      alert("Please select an image to upload.");
+      return;
+    }
+    if (imageData.description === "") {
+      alert("Please enter a description for the image.");
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", imageData.img);
+    data.append("description", imageData.description);
+
+    axios
+      .post(`${import.meta.env.VITE_BACKEND}/api/upload`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((response) => {
+        props.addImage(response.data);
+        handleInactiveImage();
+      });
+  };
 
   return (
     // Container

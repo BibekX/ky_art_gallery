@@ -1,37 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Typography } from "@mui/material";
+import axios from "axios";
 
 import UploadImage from "../components/upload/UploadImage";
 import GalleryImageList from "../components/gallery/GalleryImageList";
 
-import Image1 from "../assets/image1.avif";
-import Image2 from "../assets/image2.avif";
-import Image3 from "../assets/image3.avif";
-import Default from "../assets/default.jpg";
-
 function GalleryPage() {
-  const [imageData, setImageData] = useState([
-    {
-      id: 1,
-      img: Image1,
-      title: "Image 1",
-    },
-    {
-      id: 2,
-      img: Image2,
-      title: "Image 2",
-    },
-    {
-      id: 3,
-      img: Image3,
-      title: "Image 3",
-    },
-    {
-      id: 4,
-      img: Default,
-      title: "Image 4",
-    },
-  ]);
+  const [imageData, setImageData] = useState([]);
+
+  useEffect(() => {
+    async function getGallery() {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND}/api/gallery`
+        );
+        setImageData(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    getGallery();
+  }, []);
 
   return (
     <Container
@@ -46,7 +35,12 @@ function GalleryPage() {
       }}
     >
       <Typography variant="h3">KY & Company Art Gallery</Typography>
-      <UploadImage />
+      <UploadImage
+        addImage={(data) => {
+          console.log("data", data);
+          setImageData((prev) => [data, ...prev]);
+        }}
+      />
       <GalleryImageList imageData={imageData} />
     </Container>
   );

@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  Box,
-  ImageList,
-  ImageListItem,
-  Modal,
-  Typography,
-} from "@mui/material";
+import { Box, ImageList, ImageListItem, Modal } from "@mui/material";
 
 function GalleryImageList(props) {
   const style = {
@@ -13,7 +7,6 @@ function GalleryImageList(props) {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: 400,
     bgcolor: "background.paper",
     border: "2px solid #000",
     boxShadow: 24,
@@ -26,19 +19,19 @@ function GalleryImageList(props) {
     setOpen(true);
   };
   const handleClose = () => setOpen(false);
-  const [activeImage, setActiveImage] = useState({ img: "", title: "" });
+  const [activeImage, setActiveImage] = useState({ url: "", description: "" });
 
   return (
     <>
       <ImageList cols={3} sx={{ my: 10 }}>
         {props.imageData.map((item) => (
           <ImageListItem
-            key={item.img}
+            key={item.name}
             sx={{ "&:hover": { cursor: "pointer" } }}
           >
             <img
-              src={`${item.img}`}
-              alt={item.title}
+              src={`${item.url}`}
+              alt={item.description}
               loading="lazy"
               style={{
                 height: 200,
@@ -50,7 +43,11 @@ function GalleryImageList(props) {
         ))}
         <Modal open={open} onClose={handleClose} disableAutoFocus={true}>
           <Box sx={style}>
-            <img src={`${activeImage.img}`} alt={activeImage.title} />
+            <img
+              src={`${activeImage.url}`}
+              alt={activeImage.description}
+              style={{ maxHeight: "70vh", maxWidth: "90vw" }}
+            />
           </Box>
         </Modal>
       </ImageList>
