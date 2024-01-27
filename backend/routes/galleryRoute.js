@@ -7,11 +7,9 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get("/api/gallery", galleryController.getGallery);
-router.post(
-  "/api/upload",
-  upload.single("file"),
-  galleryController.postGallery
-);
+router.get("/gallery", galleryController.getGallery);
+router.get("/gallery/search/:searchValue", galleryController.getSearchGallery);
+router.get("/gallery/scan/:scanValue", galleryController.getScanGallery);
+router.post("/upload", upload.single("file"), galleryController.postGallery);
 
 module.exports = router;

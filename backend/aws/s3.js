@@ -50,7 +50,7 @@ const getObjectSignedUrl = async (imageName) => {
   };
 
   const command = new GetObjectCommand(params);
-  const seconds = 3600;
+  const seconds = 60 * 60 * 24 * 7; //7 days
   const url = await getSignedUrl(s3Client, command, { expiresIn: seconds });
 
   return url;

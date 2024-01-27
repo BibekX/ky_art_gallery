@@ -136,10 +136,18 @@ function UploadImage(props) {
           />
           {/* Upload Button */}
           <Box>
-            <Button variant="contained" onClick={handleUploadImage}>
+            <Button
+              variant="contained"
+              onClick={handleUploadImage}
+              sx={{ mx: 1 }}
+            >
               Upload Image
             </Button>
-            <Button variant="outlined" onClick={handleInactiveImage}>
+            <Button
+              variant="outlined"
+              onClick={handleInactiveImage}
+              sx={{ mx: 1 }}
+            >
               Cancel
             </Button>
           </Box>

@@ -12,7 +12,6 @@ function App() {
       MuiButton: {
         styleOverrides: {
           root: {
-            margin: "0 0.5rem",
             fontWeight: "bold",
           },
         },

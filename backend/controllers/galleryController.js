@@ -21,6 +21,46 @@ exports.getGallery = async (req, res) => {
   }
 };
 
+exports.getSearchGallery = async (req, res) => {
+  try {
+    const gallery = await Gallery.find({
+      description: { $regex: req.params.searchValue, $options: "i" },
+    }).sort({ _id: -1 });
+    const updatedGallery = await Promise.all(
+      gallery.map(async (image) => {
+        const imageUrl = await getObjectSignedUrl(image.name);
+        const imageObj = image.toObject();
+        imageObj.url = imageUrl;
+        return imageObj;
+      })
+    );
+    res.send(updatedGallery);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+exports.getScanGallery = async (req, res) => {
+  console.log("req.params.scan", req.params.scanValue);
+  try {
+    const gallery = await Gallery.find({
+      name: req.params.scanValue,
+    }).sort({ _id: -1 });
+    console.log("gallery", gallery);
+    const updatedGallery = await Promise.all(
+      gallery.map(async (image) => {
+        const imageUrl = await getObjectSignedUrl(image.name);
+        const imageObj = image.toObject();
+        imageObj.url = imageUrl;
+        return imageObj;
+      })
+    );
+    res.send(updatedGallery);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
 exports.postGallery = async (req, res) => {
   try {
     const imageName = uuidv4();
@@ -39,7 +79,6 @@ exports.postGallery = async (req, res) => {
     });
     await gallery.save();
     const imageUrl = await getObjectSignedUrl(gallery.name);
-    console.log("upload");
     const imageObj = gallery.toObject();
     imageObj.url = imageUrl;
     res.send(imageObj);

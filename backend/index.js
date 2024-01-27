@@ -16,7 +16,7 @@ mongoose.connect("mongodb://localhost/ky");
 app.use(cors());
 app.use(express.json());
 
-app.use(galleryRoute);
+app.use("/api", galleryRoute);
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
