@@ -2,66 +2,58 @@ const { v4: uuidv4 } = require("uuid");
 const sharp = require("sharp");
 const Gallery = require("../models/Gallery");
 
-const { uploadImage, deleteImage, getObjectSignedUrl } = require("../aws/s3");
+const { uploadImage, getObjectSignedUrl } = require("../aws/s3");
 
-exports.getGallery = async (req, res) => {
+const getGalleryWithSignedUrl = async (gallery) => {
+  return await Promise.all(
+    gallery.map(async (image) => {
+      const imageUrl = await getObjectSignedUrl(image.name);
+      const imageObj = image.toObject();
+      imageObj.url = imageUrl;
+      return imageObj;
+    })
+  );
+};
+
+const throwServerError = (errorCause, error) => {
+  res.status(500).send(`${errorCause}: ${error}`);
+};
+
+const getGallery = async (req, res) => {
   try {
     const gallery = await Gallery.find().sort({ _id: -1 });
-    const updatedGallery = await Promise.all(
-      gallery.map(async (image) => {
-        const imageUrl = await getObjectSignedUrl(image.name);
-        const imageObj = image.toObject();
-        imageObj.url = imageUrl;
-        return imageObj;
-      })
-    );
+    const updatedGallery = await getGalleryWithSignedUrl(gallery);
     res.send(updatedGallery);
   } catch (error) {
-    res.status(500).send(error);
+    throwServerError("Error retrieving gallery", error);
   }
 };
 
-exports.getSearchGallery = async (req, res) => {
+const getSearchGallery = async (req, res) => {
   try {
     const gallery = await Gallery.find({
       description: { $regex: req.params.searchValue, $options: "i" },
     }).sort({ _id: -1 });
-    const updatedGallery = await Promise.all(
-      gallery.map(async (image) => {
-        const imageUrl = await getObjectSignedUrl(image.name);
-        const imageObj = image.toObject();
-        imageObj.url = imageUrl;
-        return imageObj;
-      })
-    );
+    const updatedGallery = await getGalleryWithSignedUrl(gallery);
     res.send(updatedGallery);
   } catch (error) {
-    res.status(500).send(error);
+    throwServerError("Error retrieving searched data", error);
   }
 };
 
-exports.getScanGallery = async (req, res) => {
-  console.log("req.params.scan", req.params.scanValue);
+const getScanGallery = async (req, res) => {
   try {
     const gallery = await Gallery.find({
       name: req.params.scanValue,
     }).sort({ _id: -1 });
-    console.log("gallery", gallery);
-    const updatedGallery = await Promise.all(
-      gallery.map(async (image) => {
-        const imageUrl = await getObjectSignedUrl(image.name);
-        const imageObj = image.toObject();
-        imageObj.url = imageUrl;
-        return imageObj;
-      })
-    );
+    const updatedGallery = await getGalleryWithSignedUrl(gallery);
     res.send(updatedGallery);
   } catch (error) {
-    res.status(500).send(error);
+    throwServerError("Error retrieving scanned data", error);
   }
 };
 
-exports.postGallery = async (req, res) => {
+const postGallery = async (req, res) => {
   try {
     const imageName = uuidv4();
     const { buffer, mimetype } = req.file;
@@ -83,6 +75,13 @@ exports.postGallery = async (req, res) => {
     imageObj.url = imageUrl;
     res.send(imageObj);
   } catch (error) {
-    res.status(500).send(error);
+    throwServerError("Error uploading image", error);
   }
+};
+
+module.exports = {
+  getGallery,
+  getSearchGallery,
+  getScanGallery,
+  postGallery,
 };

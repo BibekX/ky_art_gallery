@@ -6,16 +6,20 @@ import {
   Container,
   IconButton,
   Link,
+  Snackbar,
   TextField,
 } from "@mui/material";
 import axios from "axios";
 
-import DefaultImage from "../../assets/default.jpg";
+import DefaultImage from "/public/default.jpg";
 
-function UploadImage(props) {
+function UploadImage({ addImage }) {
   const [previewImage, setPreviewImage] = useState(DefaultImage);
   const [imageData, setImageData] = useState({ img: null, description: "" });
   const [uploadActive, setUploadActive] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const inputRef = useRef(null);
 
   const handleActiveImage = () => {
@@ -36,10 +40,13 @@ function UploadImage(props) {
   const handleImageChange = (event) => {
     if (event.target.files[0]) {
       const file = event.target.files[0];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5242880;
 
       if (file.size >= maxSize) {
-        alert("File is too large, please select a file smaller than 5MB.");
+        setSnackbarMessage(
+          "File is too large, please select a file smaller than 5MB."
+        );
+        setSnackbarOpen(true);
         return;
       }
       setPreviewImage(URL.createObjectURL(event.target.files[0]));
@@ -54,11 +61,13 @@ function UploadImage(props) {
   const handleUploadImage = (event) => {
     event.preventDefault();
     if (imageData.img === null) {
-      alert("Please select an image to upload.");
+      setSnackbarMessage("Please select an image to upload.");
+      setSnackbarOpen(true);
       return;
     }
     if (imageData.description === "") {
-      alert("Please enter a description for the image.");
+      setSnackbarMessage("Please enter a description for the image.");
+      setSnackbarOpen(true);
       return;
     }
 
@@ -67,40 +76,43 @@ function UploadImage(props) {
     data.append("description", imageData.description);
 
     axios
-      .post(`${import.meta.env.VITE_BACKEND}/api/upload`, data, {
+      .post(`${import.meta.env.VITE_BACKEND_SERVER}/api/upload`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((response) => {
-        props.addImage(response.data);
+        addImage(response.data);
         handleInactiveImage();
       });
   };
 
+  const uploadContainerStyle = {
+    marginTop: 4,
+  };
+
+  const uploadBoxStyle = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  };
+
+  const buttonStyle = { mx: 1 };
+
+  const imageDescriptionStyle = { my: 3 };
+
+  const previewImageStyle = {
+    width: 350,
+    height: 200,
+  };
+
   return (
-    // Container
-    <Container
-      component="main"
-      maxWidth="sm"
-      sx={{
-        marginTop: 4,
-      }}
-    >
-      {/* Upload Button */}
+    <Container component="main" maxWidth="sm" sx={uploadContainerStyle}>
       <Box hidden={uploadActive}>
         <Button variant="contained" onClick={handleActiveImage}>
           Upload
         </Button>
       </Box>
-      {/* Upload Button Container */}
       <Box hidden={!uploadActive}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          {/* Image File Input */}
+        <Box sx={uploadBoxStyle}>
           <input
             type="file"
             accept="image/png"
@@ -109,50 +121,50 @@ function UploadImage(props) {
             onChange={handleImageChange}
             hidden
           />
-          {/* Image Preview */}
           <IconButton onClick={handleBrowseImage}>
             <CardMedia
               component="img"
-              sx={{
-                width: 350,
-                height: 200,
-              }}
+              sx={previewImageStyle}
               image={previewImage}
             />
           </IconButton>
           <Link href="#" underline="none" onClick={handleBrowseImage}>
             Add Photo
           </Link>
-          {/* Image Description */}
           <TextField
             label="Image Description"
             variant="outlined"
             name="description"
-            sx={{ my: 3 }}
+            sx={imageDescriptionStyle}
             required
             fullWidth
             value={imageData.description}
             onChange={handleDescriptionChange}
           />
-          {/* Upload Button */}
           <Box>
             <Button
               variant="contained"
               onClick={handleUploadImage}
-              sx={{ mx: 1 }}
+              sx={buttonStyle}
             >
               Upload Image
             </Button>
             <Button
               variant="outlined"
               onClick={handleInactiveImage}
-              sx={{ mx: 1 }}
+              sx={buttonStyle}
             >
               Cancel
             </Button>
           </Box>
         </Box>
       </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </Container>
   );
 }

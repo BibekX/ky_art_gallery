@@ -23,6 +23,10 @@ const s3Client = new S3Client({
   },
 });
 
+const throwServerError = (errorCause, error) => {
+  res.status(500).send(`${errorCause}: ${error}`);
+};
+
 const uploadImage = async (imageBuffer, imageName, mimetype) => {
   const uploadParams = {
     Bucket: bucketName,
@@ -31,7 +35,11 @@ const uploadImage = async (imageBuffer, imageName, mimetype) => {
     ContentType: mimetype,
   };
 
-  await s3Client.send(new PutObjectCommand(uploadParams));
+  try {
+    await s3Client.send(new PutObjectCommand(uploadParams));
+  } catch (error) {
+    throwServerError("Error uploading image to S3,", err);
+  }
 };
 
 const deleteImage = async (imageName) => {
@@ -40,7 +48,11 @@ const deleteImage = async (imageName) => {
     Key: imageName,
   };
 
-  await s3Client.send(new DeleteObjectCommand(deleteParams));
+  try {
+    await s3Client.send(new DeleteObjectCommand(deleteParams));
+  } catch (error) {
+    throwServerError("Error deleting image from S3,", err);
+  }
 };
 
 const getObjectSignedUrl = async (imageName) => {
@@ -50,10 +62,14 @@ const getObjectSignedUrl = async (imageName) => {
   };
 
   const command = new GetObjectCommand(params);
-  const seconds = 60 * 60 * 24 * 7; //7 days
-  const url = await getSignedUrl(s3Client, command, { expiresIn: seconds });
+  const seconds = 604800;
 
-  return url;
+  try {
+    const url = await getSignedUrl(s3Client, command, { expiresIn: seconds });
+    return url;
+  } catch (error) {
+    throwServerError("Error getting signed URL,", err);
+  }
 };
 
-module.exports = { uploadImage, deleteImage, getObjectSignedUrl };
+module.exports = { uploadImage, getObjectSignedUrl };

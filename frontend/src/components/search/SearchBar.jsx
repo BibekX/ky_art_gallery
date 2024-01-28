@@ -1,77 +1,119 @@
 import React, { useState } from "react";
-import { Container, InputAdornment, TextField } from "@mui/material";
+import { Box, Button, InputAdornment, TextField } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import { QrScanner } from "@yudiel/react-qr-scanner";
 
-function SearchBar(props) {
+function SearchBar({ searchValue, scanValue }) {
   const [search, setSearch] = useState("");
   const [scannerActive, setScannerActive] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
   };
+
+  const handleClearResult = () => {
+    setShowResult(false);
+    setSearch("");
+    searchValue("");
+  };
+
+  const searchContainerStyle = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  };
+
+  const iconHoverStyle = {
+    cursor: "pointer",
+    transition: "transform 0.3s",
+    "&:hover": {
+      transform: "scale(1.15)",
+    },
+  };
+
+  const searchInputStyle = {
+    width: "39rem",
+    maxWidth: "100%",
+    background: "#303030",
+    my: 5,
+  };
+
+  const buttonMarginStyle = {
+    my: 3,
+  };
+
   return (
-    <Container maxWidth="sm">
-      <TextField
-        id="outlined-search"
-        placeholder="Search image with description"
-        type="search"
-        onChange={handleSearchChange}
-        value={search}
-        onKeyUp={(event) => {
-          if (event.key === "Enter") {
-            props.searchValue(search);
-          }
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon
-                sx={{
-                  cursor: "pointer",
-                  transition: "transform 0.3s",
-                  "&:hover": {
-                    transform: "scale(1.15)",
-                  },
-                }}
-                onClick={() => props.searchValue(search)}
-              />
-            </InputAdornment>
-          ),
-          endAdornment: (
-            <InputAdornment position="end">
-              <QrCodeScannerIcon
-                sx={{
-                  cursor: "pointer",
-                  transition: "transform 0.3s",
-                  "&:hover": {
-                    transform: "scale(1.15)",
-                  },
-                }}
-                onClick={() => setScannerActive(true)}
-              />
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          width: "800px",
-          maxWidth: "100%",
-          background: "#303030",
-          my: 5,
-        }}
-      />
-      {scannerActive && (
-        <QrScanner
-          onDecode={(result) => {
-            console.log("result", result);
-            props.scanValue(result);
-            setScannerActive(false);
+    <Box>
+      <Box sx={searchContainerStyle}>
+        <TextField
+          id="outlined-search"
+          placeholder="Search image with description"
+          type="search"
+          onChange={handleSearchChange}
+          value={search}
+          onKeyUp={(event) => {
+            if (event.key === "Enter") {
+              searchValue(search);
+              setShowResult(true);
+            }
           }}
-          onError={(error) => console.log(error?.message)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon
+                  sx={iconHoverStyle}
+                  onClick={() => {
+                    searchValue(search);
+                    setShowResult(true);
+                  }}
+                />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <QrCodeScannerIcon
+                  sx={iconHoverStyle}
+                  onClick={() => setScannerActive(true)}
+                />
+              </InputAdornment>
+            ),
+          }}
+          sx={searchInputStyle}
         />
+        {showResult && (
+          <Button
+            variant="outlined"
+            onClick={() => handleClearResult(false)}
+            sx={buttonMarginStyle}
+          >
+            Clear Result
+          </Button>
+        )}
+      </Box>
+      {scannerActive && (
+        <Box>
+          <QrScanner
+            onResult={(result) => {
+              scanValue(result);
+              setScannerActive(false);
+              setShowResult(true);
+            }}
+            onError={(error) => {
+              console.log(error?.message);
+            }}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => setScannerActive(false)}
+            sx={buttonMarginStyle}
+          >
+            Cancel
+          </Button>
+        </Box>
       )}
-    </Container>
+    </Box>
   );
 }
 

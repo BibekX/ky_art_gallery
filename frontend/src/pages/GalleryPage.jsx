@@ -1,41 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { Container, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Container, Snackbar, Typography } from "@mui/material";
 import axios from "axios";
 
 import UploadImage from "../components/upload/UploadImage";
 import GalleryImageList from "../components/gallery/GalleryImageList";
 import SearchBar from "../components/search/SearchBar";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_SERVER;
+
 function GalleryPage() {
   const [imageData, setImageData] = useState([]);
-
-  async function getGallery() {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND}/api/gallery`
-      );
-      setImageData(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  const [snackbarMessage, setSnackbarMessage] = useState(null);
 
   useEffect(() => {
-    getGallery();
+    fetchData(`${BACKEND_URL}/api/gallery`);
   }, []);
 
+  const fetchData = async (url) => {
+    try {
+      const response = await axios(url);
+      setImageData(response.data);
+    } catch (error) {
+      setSnackbarMessage(error.message);
+    }
+  };
+
+  const containerStyle = {
+    mt: 6,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    textAlign: "center",
+  };
+
   return (
-    <Container
-      component="main"
-      maxWidth="lg"
-      sx={{
-        mt: 6,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-      }}
-    >
+    <Container maxWidth="lg" sx={containerStyle}>
       <Typography variant="h3">KY & Company Art Gallery</Typography>
       <UploadImage
         addImage={(data) => {
@@ -45,30 +44,24 @@ function GalleryPage() {
       <SearchBar
         searchValue={async (value) => {
           if (value === "") {
-            getGallery();
+            fetchData(`${BACKEND_URL}/api/gallery`);
             return;
           }
-          try {
-            const response = await axios.get(
-              `${import.meta.env.VITE_BACKEND}/api/gallery/search/${value}`
-            );
-            setImageData(response.data);
-          } catch (error) {
-            console.error(error);
-          }
+          fetchData(`${BACKEND_URL}/api/gallery/search/${value}`);
         }}
         scanValue={async (value) => {
-          try {
-            const response = await axios.get(
-              `${import.meta.env.VITE_BACKEND}/api/gallery/scan/${value}`
-            );
-            setImageData(response.data);
-          } catch (error) {
-            console.error(error);
-          }
+          fetchData(`${BACKEND_URL}/api/gallery/scan/${value}`);
         }}
       />
       <GalleryImageList imageData={imageData} />
+      {snackbarMessage && (
+        <Snackbar
+          open={!!snackbarMessage}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarMessage(null)}
+          message={snackbarMessage}
+        />
+      )}
     </Container>
   );
 }
